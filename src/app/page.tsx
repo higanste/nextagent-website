@@ -91,24 +91,48 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Extension Overlay Simulation */}
-              <div className="absolute right-4 top-4 w-72 bg-[#0c0d14]/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden p-4">
-                <div className="flex gap-3 mb-3">
-                  <div className="w-6 h-6 rounded-full bg-purple-500/20 border border-purple-500/30 flex mt-0.5"><div className="m-auto w-1 h-1 bg-purple-400 rounded-full animate-ping"></div></div>
-                  <div className="bg-[#15161e] border border-white/5 rounded-xl rounded-tl-sm p-3 text-xs text-gray-300">
-                    <p className="mb-2">Typing "latest AI news" into the Google search bar...</p>
-                    <div className="bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-md p-1.5 flex items-center gap-2">
-                       <span className="text-[10px]">⌨️</span> Type: latest AI news
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Comet-style Screen Overlay Simulation */}
-              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-md border border-[#9b5dff]/30 text-white px-5 py-2.5 rounded-full text-sm font-medium flex items-center gap-3 shadow-[0_0_20px_rgba(155,100,255,0.2)]">
-                <div className="w-2.5 h-2.5 bg-[#9b5dff] rounded-full shadow-[0_0_10px_rgba(155,100,255,0.8)] animate-pulse"></div>
-                Agent is typing...
-                <span className="text-red-400 text-xs ml-2 cursor-pointer">✖ Cancel</span>
+              {/* Extension Overlay Simulation (New Widget UI) */}
+              <div className="absolute right-4 top-4 w-[340px] bg-[#191A1D] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col font-sans">
+                 <div className="flex items-center justify-between px-4 py-3 bg-[#202226] border-b border-white/5">
+                   <div className="flex items-center gap-2">
+                     <svg width="18" height="18" viewBox="0 0 28 28" fill="none">
+                       <path d="M7 21V7L14 17.5L21 7V21" stroke="#2DD4BF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                     </svg>
+                     <span className="font-semibold text-sm text-white">NexAgent</span>
+                   </div>
+                   <div className="flex items-center gap-1.5">
+                     <div className="w-6 h-6 rounded flex border border-white/5 opacity-50 justify-center items-center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white"><path d="M5 12h14"/></svg></div>
+                     <div className="w-6 h-6 rounded flex border border-white/5 opacity-50 justify-center items-center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white"><path d="M18 6L6 18M6 6l12 12"/></svg></div>
+                   </div>
+                 </div>
+                 <div className="p-4 space-y-4">
+                   <div className="flex justify-end">
+                     <div className="bg-[#2b2d31] text-white px-3 py-2 rounded-xl text-[13px] max-w-[80%]">Compile the latest AI news.</div>
+                   </div>
+                   <div className="flex flex-col gap-2">
+                     <div className="text-gray-100 text-[13px] px-1">Taking action on Google.</div>
+                     <div className="bg-[#202226] border border-white/10 rounded-xl overflow-hidden">
+                       <div className="px-3 py-2 text-[11px] text-gray-300 flex justify-between items-center bg-white/5">
+                         <div className="flex items-center gap-2"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg> Investigating Google...</div>
+                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6"/></svg>
+                       </div>
+                       <div className="p-3 text-[10px] space-y-2 border-t border-white/5 font-mono text-gray-400">
+                         <div className="flex items-center gap-2 text-[#2DD4BF]"><span className="text-xs">✓</span> Typed "latest AI news"</div>
+                         <div className="flex items-center gap-2 text-[#2DD4BF]"><span className="text-xs">✓</span> Pressed Enter</div>
+                         <div className="flex items-center gap-2 text-white animate-pulse"><span className="text-xs">●</span> Extracting results...</div>
+                       </div>
+                     </div>
+                   </div>
+                   <div className="h-4"></div>
+                 </div>
+                 {/* Input area */}
+                 <div className="p-3 bg-[#191A1D]">
+                   <div className="border border-white/10 bg-[#202226] rounded-xl flex items-center p-2 gap-2">
+                     <div className="text-[10px] bg-white/10 px-2 py-1 rounded-full text-white flex items-center gap-1">✨ Smart <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6"/></svg></div>
+                     <div className="flex-1 text-[12px] text-gray-500">Ask anything...</div>
+                     <div className="bg-[#2DD4BF] rounded p-1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#202226" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+                   </div>
+                 </div>
               </div>
             </div>
           </div>
