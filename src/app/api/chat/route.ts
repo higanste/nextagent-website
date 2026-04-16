@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 
-const GROQ_KEYS = [
-  process.env.GROQ_API_KEY,
-  // Add more keys in Vercel Environment Variables
-].filter(Boolean);
+// Support single key or comma-separated multiple keys
+const rawKey = process.env.GROQ_API_KEY || '';
+const GROQ_KEYS = rawKey.split(',').map(k => k.trim()).filter(Boolean);
 
-const GROQ_MODEL = 'llama-3.1-70b-versatile';
+// Updated - llama-3.1-70b-versatile was deprecated Dec 2024
+const GROQ_MODEL = 'llama-3.3-70b-versatile';
 
 let currentKeyIndex = 0;
 function getNextKey() {
