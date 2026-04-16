@@ -1,33 +1,31 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
-  title: "NextAgent | Your Personal AI Browser Assistant",
-  description: "Tell your browser what to do. NextAgent is an AI browser extension that visually clicks, types, and automates your web tasks.",
-};
+  title: 'NexAgent — Chat with Any Document',
+  description: 'Upload PDFs, Word docs, and more. Ask questions. Get instant answers with citations. Free forever.',
+  metadataBase: new URL('https://nextagent.site'),
+  openGraph: {
+    title: 'NexAgent — Chat with Any Document',
+    description: 'Upload PDFs, Word docs, and more. Ask questions. Get instant answers with citations.',
+    url: 'https://nextagent.site',
+    siteName: 'NexAgent',
+  },
+}
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="en" className={inter.variable}>
+      <body className="bg-[#0a0a0a] text-[#e8e8e8] antialiased">
+        {children}
+      </body>
     </html>
-  );
+  )
 }

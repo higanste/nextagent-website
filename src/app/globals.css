@@ -2,74 +2,135 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Design tokens (Impeccable: tinted neutrals, no pure black/gray) ── */
 :root {
-  --bg: #06070e;
-  --bg-card: rgba(255, 255, 255, 0.03);
-  --border: rgba(255, 255, 255, 0.08);
-  --violet: #b87dff;
-  --cyan: #00d8ff;
+  --bg:        #0a0a0a;
+  --bg-subtle: #111113;
+  --bg-card:   #16161a;
+  --border:    rgba(255, 255, 255, 0.07);
+  --border-hi: rgba(255, 255, 255, 0.14);
+  --text:      #e8e8e8;
+  --text-dim:  #8a8a94;
+  --accent:    #7c6dfa;
+  --accent-hi: #9d91fb;
+  --success:   #34d399;
+  --danger:    #f87171;
+  --font:      var(--font-inter), system-ui, sans-serif;
 }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  background-color: var(--bg);
-  color: white;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  overflow-x: hidden;
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
 
-.grad-text {
-  background: linear-gradient(135deg, var(--violet), var(--cyan));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* ── Focus ring (accessibility, Impeccable: visible focus states) ── */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
 }
 
-.glass {
+/* ── Typography scale (Impeccable: modular scale) ── */
+.text-display { font-size: clamp(2.25rem, 5vw, 3.75rem); font-weight: 700; letter-spacing: -0.03em; line-height: 1.08; }
+.text-heading  { font-size: clamp(1.25rem, 2.5vw, 1.75rem); font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; }
+.text-body     { font-size: 1rem; line-height: 1.65; color: var(--text); }
+.text-caption  { font-size: 0.8125rem; color: var(--text-dim); line-height: 1.5; }
+
+/* ── Surface primitives ── */
+.surface {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  backdrop-filter: blur(12px);
-  border-radius: 16px;
-}
-
-.hero-glow {
-  position: absolute;
-  top: -20%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 600px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(155, 100, 255, 0.15) 0%, transparent 70%);
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: -1;
-}
-
-/* Base button */
-.btn-primary {
-  background: linear-gradient(135deg, hsl(265,85%,55%), hsl(188,92%,45%));
-  color: white;
-  padding: 12px 28px;
   border-radius: 12px;
-  font-weight: 600;
+}
+
+.surface-hi {
+  background: var(--bg-card);
+  border: 1px solid var(--border-hi);
+  border-radius: 12px;
+}
+
+/* ── Button primitives ── */
+.btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  transition: all 0.2s;
-  border: 1px solid rgba(255,255,255,0.1);
-  box-shadow: 0 4px 20px rgba(155, 100, 255, 0.2);
-}
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(155, 100, 255, 0.4);
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  border-radius: 8px;
+  padding: 0.625rem 1.25rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: none;
+  white-space: nowrap;
+  user-select: none;
 }
 
-.grid-bg {
-  position: absolute;
-  inset: 0;
-  background-image: 
-    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
-  z-index: -2;
-  mask-image: radial-gradient(circle at center, black, transparent 80%);
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
 }
+.btn-primary:hover { background: var(--accent-hi); transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--border-hi); background: rgba(255,255,255,0.04); }
+
+.btn-danger {
+  background: rgba(248, 113, 113, 0.1);
+  color: var(--danger);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+}
+.btn-danger:hover { background: rgba(248, 113, 113, 0.2); }
+
+/* ── Input primitives ── */
+.input {
+  width: 100%;
+  font-family: var(--font);
+  font-size: 0.9375rem;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.625rem 0.875rem;
+  color: var(--text);
+  transition: border-color 0.15s ease;
+  resize: none;
+}
+.input::placeholder { color: var(--text-dim); }
+.input:focus        { outline: none; border-color: var(--accent); }
+
+/* ── Scrollbar (minimal, Impeccable: no visual noise) ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+/* ── Spinner ── */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  width: 18px; height: 18px;
+  border: 2px solid rgba(255,255,255,0.1);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+/* ── Fade in ── */
+@keyframes fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.fade-up { animation: fade-up 0.35s ease forwards; }
+
+/* ── Chat message streaming cursor ── */
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+.cursor-blink::after { content: '▋'; display: inline-block; animation: blink 1s step-end infinite; margin-left: 2px; font-size: 0.85em; }
