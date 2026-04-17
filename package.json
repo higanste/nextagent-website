@@ -36,8 +36,6 @@
     "@types/react-dom": "^19",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
-    "eslint-config-next": "16.2.3",
-    "eslint-plugin-next-on-pages": "^1.13.16",
     "tailwindcss": "^4",
     "typescript": "^5",
     "wrangler": "^4.83.0"
