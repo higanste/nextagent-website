@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { SignOutButton } from '@/components/SignOutButton';
 import { auth } from '@/auth';
-import { getRequestContext } from '@opennextjs/cloudflare';
+import { getRequestContext } from '@/cf-helpers';
 import { getDb } from '@/db';
 import { documents, users } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';

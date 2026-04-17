@@ -2,7 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { DocChat } from '@/components/DocChat';
 import { auth } from '@/auth';
-import { getRequestContext } from '@opennextjs/cloudflare';
+import { getRequestContext } from '@/cf-helpers';
 import { getDb } from '@/db';
 import { documents, usageLogs, users } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';

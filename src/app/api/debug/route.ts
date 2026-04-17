@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getRequestContext } from '@opennextjs/cloudflare';
+import { getRequestContext } from '@/cf-helpers';
 
 export const runtime = 'edge';
 

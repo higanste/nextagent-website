@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getRequestContext } from '@opennextjs/cloudflare';
+import { getRequestContext } from '@/cf-helpers';
 import Stripe from 'stripe';
 import { getDb } from '@/db';
 import { users } from '@/db/schema';
