@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getRequestContext } from '@cloudflare/next-on-pages';
+import { getRequestContext } from '@opennextjs/cloudflare';
 import { auth } from '@/auth';
 import { getDb } from '@/db';
 import { documents, chunks, usageLogs, users } from '@/db/schema';

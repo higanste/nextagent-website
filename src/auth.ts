@@ -1,6 +1,6 @@
 import NextAuth from 'next-auth';
 import Google from 'next-auth/providers/google';
-import { getRequestContext } from '@cloudflare/next-on-pages';
+import { getRequestContext } from '@opennextjs/cloudflare';
 import { getDb } from './db';
 import { users } from './db/schema';
 import { eq } from 'drizzle-orm';
