@@ -9,14 +9,14 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'NexAgent — Chat with Any Document',
+  title: 'NextAgent — Chat with Any Document',
   description: 'Upload PDFs, Word docs, and more. Ask questions. Get instant answers with citations. Free forever.',
   metadataBase: new URL('https://nextagent.site'),
   openGraph: {
-    title: 'NexAgent — Chat with Any Document',
+    title: 'NextAgent — Chat with Any Document',
     description: 'Upload PDFs, Word docs, and more. Ask questions. Get instant answers with citations.',
     url: 'https://nextagent.site',
-    siteName: 'NexAgent',
+    siteName: 'NextAgent',
   },
 }
 

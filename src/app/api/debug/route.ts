@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
       process_env_keys: Object.keys(process.env || {}),
       auth_secret_exists: !!process.env.AUTH_SECRET,
       google_id_exists: !!process.env.AUTH_GOOGLE_ID,
-      db_binding_exists: !!env.nextagent_db,
+      db_binding_exists: !!(env as any).nextagent_db,
     });
   } catch (err: any) {
     return NextResponse.json({
