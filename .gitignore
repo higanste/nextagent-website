@@ -20,6 +20,9 @@
 # production
 /build
 
+# lockfiles (do not commit - forces npm install over npm ci in CI)
+package-lock.json
+
 # misc
 .DS_Store
 *.pem
