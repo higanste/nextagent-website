@@ -14,10 +14,7 @@ export default async function Home() {
       {/* Nav */}
       <nav style={{ padding: '1.25rem 2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-          <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
-            <rect width="28" height="28" rx="7" fill="var(--accent)"/>
-            <path d="M8 20V8l6 9 6-9v12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
+          <img src="/logo.png" alt="NextAgent Logo" width="32" height="32" style={{ borderRadius: '8px' }} />
           <span style={{ fontWeight: 700, fontSize: '1.0625rem', letterSpacing: '-0.02em' }}>NextAgent</span>
         </div>
         <a href="mailto:support@nextagent.site" style={{ color: 'var(--text-dim)', fontSize: '0.875rem', textDecoration: 'none' }}>

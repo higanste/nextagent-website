@@ -32,10 +32,7 @@ export default async function AppPage() {
       {/* App nav */}
       <nav style={{ padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', background: 'var(--bg-subtle)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-          <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
-            <rect width="28" height="28" rx="7" fill="var(--accent)"/>
-            <path d="M8 20V8l6 9 6-9v12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
+          <img src="/logo.png" alt="NextAgent Logo" width="30" height="30" style={{ borderRadius: '6px' }} />
           <span style={{ fontWeight: 700, fontSize: '1rem', letterSpacing: '-0.02em' }}>NextAgent</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
