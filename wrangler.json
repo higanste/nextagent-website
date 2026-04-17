@@ -1,9 +1,19 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "nextagent-website",
+  "main": ".open-next/worker.js",
   "compatibility_date": "2024-09-23",
-  "compatibility_flags": ["nodejs_compat"],
-  "pages_build_output_dir": ".open-next/assets",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "nextagent-website"
+    }
+  ],
   "d1_databases": [
     {
       "binding": "nextagent_db",
@@ -14,8 +24,7 @@
   "r2_buckets": [
     {
       "binding": "nextagent_docs",
-      "bucket_name": "nextagent-docs",
-      "preview_bucket_name": "nextagent-docs-preview"
+      "bucket_name": "nextagent-docs"
     }
   ]
 }
