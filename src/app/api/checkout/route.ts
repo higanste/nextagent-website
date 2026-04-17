@@ -11,8 +11,8 @@ export async function POST(req: NextRequest) {
     if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { env } = getRequestContext() as unknown as { env: any };
-    const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-      apiVersion: '2024-12-18.acacia',
+    const stripe = new Stripe(env.STRIPE_SECRET_KEY as string, {
+      apiVersion: '2024-12-18.acacia' as any,
       httpClient: Stripe.createFetchHttpClient(),
     });
 

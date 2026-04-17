@@ -12,8 +12,8 @@ export async function POST(req: NextRequest) {
   const { env } = getRequestContext() as unknown as { env: any };
   if (!env.STRIPE_SECRET_KEY) return NextResponse.json({ error: 'Stripe configured improperly' }, { status: 500 });
   
-  const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-    apiVersion: '2024-12-18.acacia',
+  const stripe = new Stripe(env.STRIPE_SECRET_KEY as string, {
+    apiVersion: '2024-12-18.acacia' as any,
     httpClient: Stripe.createFetchHttpClient(), // Required for Cloudflare Workers!
   });
 

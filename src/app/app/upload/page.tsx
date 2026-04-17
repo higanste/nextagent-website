@@ -39,7 +39,7 @@ export default function UploadPage() {
     try {
       setProgress('Processing and extracting text...')
       const res = await fetch('/api/upload', { method: 'POST', body: form })
-      const data = await res.json()
+      const data = await res.json() as { error?: string; id?: string }
       if (!res.ok) { setError(data.error || 'Upload failed'); setStatus('error'); return }
       setStatus('done')
       setProgress('Done!')

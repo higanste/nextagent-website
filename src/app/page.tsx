@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { SignInButton } from '@/components/SignInButton';
 import { auth } from '@/auth';
 
