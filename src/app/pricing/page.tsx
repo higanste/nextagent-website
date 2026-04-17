@@ -67,8 +67,8 @@ export default function PricingPage() {
           <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2rem 0', display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1, fontSize: '0.9375rem' }}>
             <li>✓ <strong>500</strong> questions / day</li>
             <li>✓ Audio uploads (MP3, WAV transcription)</li>
-            <li>✓ <strong>Premium Models:</strong> Claude 3.5 Sonnet</li>
-            <li>✓ <strong>Premium Models:</strong> GPT-4o</li>
+            <li>✓ Dual Groq keys — double the free quota</li>
+            <li>✓ Smarter fallback: Llama 3.3 70B via OpenRouter</li>
           </ul>
           <button onClick={handleCheckout} disabled={loading} className="btn btn-primary" style={{ width: '100%' }}>
             {loading ? 'Redirecting...' : 'Upgrade Now'}

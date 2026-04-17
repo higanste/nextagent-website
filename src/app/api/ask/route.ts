@@ -53,34 +53,42 @@ function rankChunks(docChunks: { content: string; chunkIndex: number }[], query:
   return scored.slice(0, 6).map(c => `[Chunk ${c.chunkIndex + 1}]\n${c.content}`);
 }
 
-// ── 3-Tier LLM Routing ───────────────────────────────────────────────
+// ── 3-Tier LLM Routing (ALL FREE) ───────────────────────────────────────────
+// Fast tier: Groq llama-3.3-70b (fastest free)
+// Think tier: OpenRouter google/gemini-2.0-flash-exp:free (free, smarter fallback)
+// Pro tier: OpenRouter meta-llama/llama-3.3-70b-instruct:free (free, higher quality)
 async function fetchAI(messages: any[], plan: string, env: any) {
-  // Tier 3: Pro
-  if (plan === 'pro') {
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${env.OPENROUTER_API_KEY}` },
-      body: JSON.stringify({ model: 'anthropic/claude-3.5-sonnet', messages }),
-    });
-    if (res.ok) return res;
-  }
-
-  // Tier 1: Fast (Groq)
+  // Tier 1: Fast (Groq) — used for everyone including pro as primary
   const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${env.GROQ_API_KEY_1}` },
-    body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages }),
+    body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages, max_tokens: 1024 }),
   });
-  
   if (groqRes.ok) return groqRes;
 
-  // Tier 2: Think Fallback (OpenRouter Free)
+  // Tier 2: Free fallback if Groq is rate-limited — try second key first
+  const groqRes2 = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${env.GROQ_API_KEY_2}` },
+    body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages, max_tokens: 1024 }),
+  });
+  if (groqRes2.ok) return groqRes2;
+
+  // Tier 3: OpenRouter free models fallback — smarter model for pro users
+  const orModel = plan === 'pro'
+    ? 'meta-llama/llama-3.3-70b-instruct:free'  // free, high quality
+    : 'google/gemini-2.0-flash-exp:free';        // free, fast
+
   const fallbackRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${env.OPENROUTER_API_KEY}` },
-    body: JSON.stringify({ model: 'google/gemini-2.0-flash-exp:free', messages }),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${env.OPENROUTER_API_KEY}`,
+      'HTTP-Referer': 'https://nextagent.site',
+      'X-Title': 'NextAgent',
+    },
+    body: JSON.stringify({ model: orModel, messages }),
   });
-
   return fallbackRes;
 }
 
