@@ -49,7 +49,7 @@ export function DocChat({ documentId, documentName, initialRemaining }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ documentId, question: q, history }),
       })
-      const data = await res.json()
+      const data = (await res.json()) as any;
 
       if (!res.ok) {
         setError(data.error || 'Something went wrong.')

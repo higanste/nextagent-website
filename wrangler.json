@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nextagent-website",
+  "compatibility_date": "2024-04-18",
+  "compatibility_flags": ["nodejs_compat"],
+  "pages_build_output_dir": ".vercel/output/static",
+  "d1_databases": [
+    {
+      "binding": "nextagent_db",
+      "database_name": "nextagent-db",
+      "database_id": "0bf56584-b59a-4874-ac21-7c4ded047612"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "nextagent_docs",
+      "bucket_name": "nextagent-docs",
+      "preview_bucket_name": "nextagent-docs-preview"
+    }
+  ]
+}

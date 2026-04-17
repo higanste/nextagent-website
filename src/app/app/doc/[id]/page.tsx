@@ -1,34 +1,41 @@
-import { createServerSupabase } from '@/lib/supabase-server'
-import { redirect, notFound } from 'next/navigation'
-import Link from 'next/link'
-import { DocChat } from '@/components/DocChat'
+import { notFound, redirect } from 'next/navigation';
+import Link from 'next/link';
+import { DocChat } from '@/components/DocChat';
+import { auth } from '@/auth';
+import { getRequestContext } from '@cloudflare/next-on-pages';
+import { getDb } from '@/db';
+import { documents, usageLogs, users } from '@/db/schema';
+import { eq, and } from 'drizzle-orm';
+
+export const runtime = 'edge';
 
 export default async function DocPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  const supabase = await createServerSupabase()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/')
+  const { id } = await params;
+  const session = await auth();
+  if (!session?.user?.id) redirect('/');
+  const userId = session.user.id;
 
-  // Verify ownership (vibe-security: check user_id)
-  const { data: doc } = await supabase
-    .from('documents')
-    .select('id, name, chunk_count, size_bytes, created_at')
-    .eq('id', id)
-    .eq('user_id', user.id)
-    .single()
+  const { env } = getRequestContext() as unknown as { env: any };
+  const db = getDb(env.nextagent_db);
 
-  if (!doc) notFound()
+  // Verify ownership
+  const doc = await db.select()
+    .from(documents)
+    .where(and(eq(documents.id, id), eq(documents.userId, userId)))
+    .get();
 
-  // Get today's remaining questions
-  const today = new Date().toISOString().split('T')[0]
-  const { data: usage } = await supabase
-    .from('usage_logs')
-    .select('count')
-    .eq('user_id', user.id)
-    .eq('action', 'ask')
-    .eq('date', today)
-    .single()
-  const remaining = 100 - (usage?.count ?? 0)
+  if (!doc) notFound();
+
+  const userRecord = await db.select({ plan: users.plan }).from(users).where(eq(users.id, userId)).get();
+  const plan = userRecord?.plan || 'free';
+  const limit = plan === 'pro' ? 500 : 50;
+
+  const today = new Date().toISOString().split('T')[0];
+  const usage = await db.select().from(usageLogs)
+    .where(and(eq(usageLogs.userId, userId), eq(usageLogs.action, 'ask'), eq(usageLogs.date, today)))
+    .get();
+  
+  const remaining = limit - (usage?.count ?? 0);
 
   return (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -45,10 +52,15 @@ export default async function DocPage({ params }: { params: Promise<{ id: string
             </div>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontWeight: 600, fontSize: '0.9375rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.name}</div>
-              <div className="text-caption">{doc.chunk_count} chunks · {Math.round((doc.size_bytes || 0) / 1024)} KB</div>
+              <div className="text-caption">{doc.chunkCount} chunks · {Math.round((doc.sizeBytes || 0) / 1024)} KB</div>
             </div>
           </div>
         </div>
+        {plan === 'free' && (
+          <Link href="/pricing" className="btn btn-ghost" style={{ padding: '0.375rem 0.75rem', fontSize: '0.8125rem' }}>
+            Upgrade for Claude 3.5
+          </Link>
+        )}
       </header>
 
       {/* Chat */}
@@ -56,5 +68,5 @@ export default async function DocPage({ params }: { params: Promise<{ id: string
         <DocChat documentId={doc.id} documentName={doc.name} initialRemaining={remaining} />
       </div>
     </div>
-  )
+  );
 }

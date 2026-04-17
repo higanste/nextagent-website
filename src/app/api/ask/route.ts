@@ -1,105 +1,149 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabase } from '@/lib/supabase-server'
+import { NextRequest, NextResponse } from 'next/server';
+import { getRequestContext } from '@cloudflare/next-on-pages';
+import { getDb } from '@/db';
+import { documents, chunks, usageLogs, users } from '@/db/schema';
+import { eq, and, sql } from 'drizzle-orm';
+import { auth } from '@/auth';
 
-const GROQ_MODEL = 'llama-3.3-70b-versatile'
-const DAILY_LIMIT = 100
+export const runtime = 'edge';
 
-// ── Rate limit check (vibe-security: never store in public Supabase table) ────
-async function checkAskLimit(supabase: any, userId: string): Promise<{ allowed: boolean; used: number }> {
-  const today = new Date().toISOString().split('T')[0]
-  const { data } = await supabase
-    .from('usage_logs')
-    .select('count')
-    .eq('user_id', userId)
-    .eq('action', 'ask')
-    .eq('date', today)
-    .single()
-  const used = data?.count ?? 0
-  return { allowed: used < DAILY_LIMIT, used }
+const FREE_DAILY_LIMIT = 50;
+const PRO_DAILY_LIMIT = 500;
+
+// ── Rate limit check via D1 ──────────────────────────────────────────
+async function checkUsage(db: any, userId: string, plan: string) {
+  const limit = plan === 'pro' ? PRO_DAILY_LIMIT : FREE_DAILY_LIMIT;
+  const today = new Date().toISOString().split('T')[0];
+  
+  let usage = await db.select().from(usageLogs)
+    .where(and(eq(usageLogs.userId, userId), eq(usageLogs.action, 'ask'), eq(usageLogs.date, today)))
+    .get();
+
+  if (!usage) {
+    // initialize
+    await db.insert(usageLogs)
+      .values({ userId, action: 'ask', date: today, count: 0 })
+      .onConflictDoNothing()
+      .run();
+    return { allowed: true, used: 0, limit };
+  }
+
+  return { allowed: usage.count < limit, used: usage.count, limit };
 }
 
-async function incrementAskCount(supabase: any, userId: string) {
-  const today = new Date().toISOString().split('T')[0]
-  await supabase.rpc('increment_usage', { p_user_id: userId, p_action: 'ask', p_date: today })
+async function incrementAskCount(db: any, userId: string) {
+  const today = new Date().toISOString().split('T')[0];
+  // Raw D1 statement because optimistic update in Drizzle SQLite can be clunky
+  await db.run(sql`
+    INSERT INTO usage_logs (userId, action, date, count)
+    VALUES (${userId}, 'ask', ${today}, 1)
+    ON CONFLICT(userId, action, date) DO UPDATE SET count = usage_logs.count + 1
+  `);
 }
 
-// ── Simple keyword relevance ranking ─────────────────────────────────────────
-function rankChunks(chunks: { content: string; chunk_index: number }[], query: string): string[] {
-  const words = query.toLowerCase().split(/\s+/).filter(w => w.length > 3)
-  const scored = chunks.map(c => {
-    const low = c.content.toLowerCase()
-    const score = words.reduce((acc, w) => acc + (low.split(w).length - 1), 0)
-    return { ...c, score }
-  })
-  scored.sort((a, b) => b.score - a.score || a.chunk_index - b.chunk_index)
-  // Take top 6 chunks, ~7200 chars — fits in Groq context
-  return scored.slice(0, 6).map(c => `[Chunk ${c.chunk_index + 1}]\n${c.content}`)
+// ── Simple keyword relevance ranking (Edge compatible without large ML libs) ──
+function rankChunks(docChunks: { content: string; chunkIndex: number }[], query: string): string[] {
+  const words = query.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+  const scored = docChunks.map(c => {
+    const low = c.content.toLowerCase();
+    const score = words.reduce((acc, w) => acc + (low.split(w).length - 1), 0);
+    return { ...c, score };
+  });
+  scored.sort((a, b) => b.score - a.score || a.chunkIndex - b.chunkIndex);
+  return scored.slice(0, 6).map(c => `[Chunk ${c.chunkIndex + 1}]\n${c.content}`);
 }
 
-// ── POST /api/ask ─────────────────────────────────────────────────────────────
+// ── 3-Tier LLM Routing ───────────────────────────────────────────────
+async function fetchAI(messages: any[], plan: string, env: any) {
+  // Tier 3: Pro
+  if (plan === 'pro') {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${env.OPENROUTER_API_KEY}` },
+      body: JSON.stringify({ model: 'anthropic/claude-3.5-sonnet', messages }),
+    });
+    if (res.ok) return res;
+  }
+
+  // Tier 1: Fast (Groq)
+  const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${env.GROQ_API_KEY_1}` },
+    body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages }),
+  });
+  
+  if (groqRes.ok) return groqRes;
+
+  // Tier 2: Think Fallback (OpenRouter Free)
+  const fallbackRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${env.OPENROUTER_API_KEY}` },
+    body: JSON.stringify({ model: 'google/gemini-2.0-flash-exp:free', messages }),
+  });
+
+  return fallbackRes;
+}
+
+// ── Main Handler ─────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   try {
-    const supabase = await createServerSupabase()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const session = await auth();
+    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const userId = session.user.id;
 
-    const { documentId, question, history } = await req.json()
-    if (!documentId || !question?.trim()) return NextResponse.json({ error: 'documentId and question are required' }, { status: 400 })
-    if (question.length > 2000) return NextResponse.json({ error: 'Question too long (max 2000 chars).' }, { status: 400 })
+    const { documentId, question, history } = await req.json() as any;
+    if (!documentId || !question?.trim()) return NextResponse.json({ error: 'Missing input' }, { status: 400 });
 
-    // Verify document belongs to this user (vibe-security: always check ownership)
-    const { data: doc } = await supabase.from('documents').select('id, name').eq('id', documentId).eq('user_id', user.id).single()
-    if (!doc) return NextResponse.json({ error: 'Document not found' }, { status: 404 })
+    const { env } = getRequestContext() as unknown as { env: any };
+    const db = getDb(env.nextagent_db);
 
-    // Rate limit
-    const { allowed, used } = await checkAskLimit(supabase, user.id)
-    if (!allowed) return NextResponse.json({ error: `Daily limit reached (${DAILY_LIMIT}/day). Resets at midnight UTC.`, remaining: 0 }, { status: 429 })
+    // Get user plan
+    const userRecord = await db.select({ plan: users.plan }).from(users).where(eq(users.id, userId)).get();
+    const plan = userRecord?.plan || 'free';
+
+    // Verify ownership
+    const doc = await db.select({ id: documents.id, name: documents.name })
+      .from(documents).where(and(eq(documents.id, documentId), eq(documents.userId, userId))).get();
+    if (!doc) return NextResponse.json({ error: 'Document not found' }, { status: 404 });
+
+    // Rate Limit check
+    const { allowed, used, limit } = await checkUsage(db, userId, plan);
+    if (!allowed) {
+      return NextResponse.json({ error: `Daily limit reached (${limit}/day). Upgrade for more!` }, { status: 429 });
+    }
 
     // Fetch chunks
-    const { data: chunks } = await supabase.from('document_chunks').select('content, chunk_index').eq('document_id', documentId).order('chunk_index')
-    if (!chunks?.length) return NextResponse.json({ error: 'No content found in this document.' }, { status: 404 })
+    const allChunks = await db.select().from(chunks).where(eq(chunks.documentId, documentId)).all();
+    if (!allChunks?.length) return NextResponse.json({ error: 'Document is empty' }, { status: 404 });
 
-    // Rank by relevance
-    const relevantContext = rankChunks(chunks, question).join('\n\n---\n\n')
-
-    const key = process.env.GROQ_API_KEY?.split(',')[0]?.trim()
-    if (!key) return NextResponse.json({ error: 'AI service not configured' }, { status: 503 })
+    const relevantContext = rankChunks(allChunks, question).join('\n\n---\n\n');
 
     const messages = [
       {
         role: 'system',
-        content: `You are a precise document assistant. Answer questions based ONLY on the document context provided. 
-If the answer is not in the context, say "I couldn't find that information in this document."
-Always indicate which chunk(s) you used by referencing "[Chunk N]" in your answer.
-Be concise and direct. Document name: "${doc.name}"`
+        content: `You are NextAgent. Answer questions strictly based on the document context. Document Name: ${doc.name}.
+Always indicate which chunk(s) you used by referencing "[Chunk N]".
+Context:
+${relevantContext}`
       },
       ...(history || []).slice(-6),
-      {
-        role: 'user',
-        content: `Document context:\n${relevantContext}\n\nQuestion: ${question}`
-      }
-    ]
+      { role: 'user', content: question }
+    ];
 
-    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-      body: JSON.stringify({ model: GROQ_MODEL, messages, temperature: 0.1, max_tokens: 1024 }),
-    })
-
-    if (!groqRes.ok) {
-      const err = await groqRes.text()
-      console.error('[ask] Groq error:', err)
-      return NextResponse.json({ error: 'AI service error. Please try again.' }, { status: 502 })
+    const aiRes = await fetchAI(messages, plan, env);
+    if (!aiRes.ok) {
+      console.error('[AI Routing Error]', await aiRes.text());
+      return NextResponse.json({ error: 'All AI networks busy. Please try again.' }, { status: 502 });
     }
 
-    const groqData = await groqRes.json()
-    const answer = groqData.choices?.[0]?.message?.content || 'No response generated.'
+    const data = await aiRes.json() as any;
+    const answer = data.choices?.[0]?.message?.content || 'No response generated.';
 
-    await incrementAskCount(supabase, user.id)
+    await incrementAskCount(db, userId);
 
-    return NextResponse.json({ answer, remaining: DAILY_LIMIT - used - 1 })
+    return NextResponse.json({ answer, remaining: limit - used - 1 });
   } catch (err) {
-    console.error('[ask]', err)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('[ask api err]', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
