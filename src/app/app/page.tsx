@@ -7,7 +7,6 @@ import { getDb } from '@/db';
 import { documents, users } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
 
-export const runtime = 'edge';
 
 export default async function AppPage() {
   const session = await auth();

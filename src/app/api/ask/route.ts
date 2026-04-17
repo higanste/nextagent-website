@@ -5,7 +5,6 @@ import { documents, chunks, usageLogs, users } from '@/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { auth } from '@/auth';
 
-export const runtime = 'edge';
 
 const FREE_DAILY_LIMIT = 50;
 const PRO_DAILY_LIMIT = 500;

@@ -5,7 +5,6 @@ import { getDb } from '@/db';
 import { documents, chunks, usageLogs, users } from '@/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
 
-export const runtime = 'edge';
 
 // ── Text extraction / R2 helpers ─────────────────────────────────────────────
 

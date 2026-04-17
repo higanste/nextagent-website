@@ -5,7 +5,6 @@ import { getDb } from '@/db';
 import { users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
-export const runtime = 'edge';
 
 // We initialize Stripe dynamically because of Cloudflare Edge caching
 export async function POST(req: NextRequest) {

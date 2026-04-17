@@ -7,7 +7,6 @@ import { getDb } from '@/db';
 import { documents, usageLogs, users } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 
-export const runtime = 'edge';
 
 export default async function DocPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

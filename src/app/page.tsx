@@ -3,7 +3,6 @@ import { SignInButton } from '@/components/SignInButton';
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 
-export const runtime = 'edge';
 
 export default async function Home() {
   const session = await auth();

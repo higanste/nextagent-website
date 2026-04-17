@@ -3,7 +3,6 @@ import { getRequestContext } from '@/cf-helpers';
 import Stripe from 'stripe';
 import { auth } from '@/auth';
 
-export const runtime = 'edge';
 
 export async function POST(req: NextRequest) {
   try {
