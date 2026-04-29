@@ -53,15 +53,15 @@ Provide a JSON response with EXACTLY this structure (no additional text):
   "summary": "Brief overall assessment"
 }`;
 
-async function callOpenAI(apiKey: string, prompt: string, url: string) {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+async function callGroq(apiKey: string, prompt: string, url: string) {
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
+      model: 'llama-3.3-70b-versatile',
       messages: [
         { role: 'system', content: prompt },
         { role: 'user', content: `Audit this website: ${url}` }
@@ -72,7 +72,7 @@ async function callOpenAI(apiKey: string, prompt: string, url: string) {
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`OpenAI API error: ${response.status} ${error}`);
+    throw new Error(`Groq API error: ${response.status} ${error}`);
   }
 
   const data = await response.json();
@@ -96,17 +96,17 @@ export async function GET(req: NextRequest) {
     }
 
     const { env } = getRequestContext() as unknown as { env: any };
-    const apiKey = env.OPENAI_API_KEY || env.OPENAI_API_KEY_2;
+    const apiKey = env.GROQ_API_KEY || env.GROQ_API_KEY_2;
 
     if (!apiKey) {
-      return NextResponse.json({ error: 'OpenAI API key not configured' }, { status: 500 });
+      return NextResponse.json({ error: 'Groq API key not configured' }, { status: 500 });
     }
 
     const results: any = { url, auditedAt: new Date().toISOString() };
 
     if (type === 'design' || type === 'full') {
       try {
-        results.design = await callOpenAI(apiKey, IMPECCABLE_AUDIT_PROMPT, url);
+        results.design = await callGroq(apiKey, IMPECCABLE_AUDIT_PROMPT, url);
       } catch (error: any) {
         results.design = { error: error.message };
       }
@@ -114,7 +114,7 @@ export async function GET(req: NextRequest) {
 
     if (type === 'security' || type === 'full') {
       try {
-        results.security = await callOpenAI(apiKey, VIBE_SECURITY_PROMPT, url);
+        results.security = await callGroq(apiKey, VIBE_SECURITY_PROMPT, url);
       } catch (error: any) {
         results.security = { error: error.message };
       }
